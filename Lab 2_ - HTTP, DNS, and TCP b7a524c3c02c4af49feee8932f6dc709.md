@@ -156,7 +156,7 @@ Open a terminal window. Using nslookup, find the A records for [www.google.com](
 
 7. [10 pts] Take a screenshot of the packets corresponding to your request, and the response from the server. If the request was resolved, what is the IP address you were given for [www.google.com](http://www.google.com/)?
 
-When the request was resolved, the given IP address for [www.google.com](http://www.google.com) is 142.250.191.68 (Keep in mind that I may receive a different IP address each time I run the `nslookup` command for www.google.com because Google often uses multiple IP addresses to distribute their traffic and improve load balancing.)
+After running `nslookup [www.google.com](http://www.google.com/)`, the request was resolved, and the given IP address for [www.google.com](http://www.google.com) is 142.250.191.68 (Keep in mind that I may receive a different IP address each time I run the `nslookup` command for www.google.com because Google often uses multiple IP addresses to distribute their traffic and improve load balancing.)
 
 Below is a screenshot of the packets corresponding to my request and the response from the [www.google.com](http://www.google.com) server:
 
@@ -164,7 +164,7 @@ Below is a screenshot of the packets corresponding to my request and the respons
 
 8. [10 pts] Did your computer want to complete the request recursively? How do you know? Take a screenshot proving your answer.
 
-Yes, my computer completed the request recursively. I can tell this because the output shows a "Non-authoritative answer" section, which means that the DNS server I queried (1.1.1.1) provided me with the final answer (the IP address) for **[www.google.com](http://www.google.com/)** without requiring you to query other DNS servers in the process. Below is a screenshot proving my findings:
+Yes, my computer completed the request recursively. I can tell this because the “Recursion Desired” flag value is “1”, which indicates that my computer wanted to complete the request recursively. Below is a screenshot proving my findings:
 
 ![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%208.png)
 
@@ -180,13 +180,7 @@ Below is a screenshot of the packets corresponding to my request and the respons
 
 10. [10 pts] What is the authoritative name server for the [ucsc.edu](http://ucsc.edu/) domain? How do you know? Take a screenshot proving your answer.
 
-They are listed under the "Non-authoritative answer" section:
-
-1. ns.zocalo.net
-2. adns1.ucsc.edu
-3. adns2.ucsc.edu
-
-These are the name servers responsible for managing the DNS records for the ucsc.edu domain. I know that the term "Non-authoritative answer" can be misleading, but it means that the response was obtained from a recursive resolver (in this case, 1.1.1.1) and not directly from the authoritative name servers. However, the information about the name servers is still accurate.
+After running, `nslookup -type=soa [ucsc.edu](http://ucsc.edu/)` to get the origin name server, run `nslookup ucsc.edu [adns1.ucsc.edu](http://adns1.ucsc.edu)` specifying the primary name server as [adns1.ucsc.edu](http://adns1.ucsc.edu). The response is the authoritative name server [adns1.usc.edu](http://adns1.usc.edu) and its corresponding IPv4 address 128.114.100.100.
 
 Below is a screenshot proving my findings:
 
@@ -220,10 +214,10 @@ Below is a screenshot of the tcptrace graph:
 
 13. [10 pts] Find a packet from the download with a source of the server and a destination of your computer. Create a tcptrace graph with this packet selected. Take a screenshot of the graph and explain what it is showing. Using an image editting program, circle the areas where the 0% loss is shown, as well as where TCP is in slow-start and congestion-avoidance.
 
-![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2013.png)
+![wolrdaw.png](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/wolrdaw.png)
 
 1. An initial period of 0% loss: The graph show a steady increase in transfer rate before the loss is set to 100%.
-2. Slow-start: During the initial phase of the transfer, TCP will be in the slow-start phase, which is characterized by an increasing line with a steep slope. Circle this part of the graph. 
+2. Slow-start: During the initial phase of the transfer, TCP will be in the slow-start phase, which is characterized by an increasing line with a steep slope.
 3. Congestion-avoidance: The plateaus in the graph are indicative of congestion avoidance. Congestion avoidance is a mechanism used to control the sending rate to avoid overwhelming the network, while slow-start is used to ramp up the sending rate quickly until congestion is detected.
 4. Packet loss: After I set the loss rate to 100%, the graph show a sudden drop in the transfer rate. This is because the sender will reduce its sending rate due to the perceived congestion.
 5. Recovery phase: Once I set the loss back to 0%, the graph show another period of slow-start.
