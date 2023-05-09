@@ -180,11 +180,17 @@ Below is a screenshot of the packets corresponding to my request and the respons
 
 10. [10 pts] What is the authoritative name server for the [ucsc.edu](http://ucsc.edu/) domain? How do you know? Take a screenshot proving your answer.
 
-After running, `nslookup -type=soa [ucsc.edu](http://ucsc.edu/)` to get the origin name server, run `nslookup ucsc.edu [adns1.ucsc.edu](http://adns1.ucsc.edu)` specifying the primary name server as [adns1.ucsc.edu](http://adns1.ucsc.edu). The response is the authoritative name server [adns1.usc.edu](http://adns1.usc.edu) and its corresponding IPv4 address 128.114.100.100.
-
-Below is a screenshot proving my findings:
+After running, `nslookup -type=soa [ucsc.edu](http://ucsc.edu/)` to get the origin name server, run `nslookup ucsc.edu [adns1.ucsc.edu](http://adns1.ucsc.edu)` specifying the primary name server as [adns1.ucsc.edu](http://adns1.ucsc.edu). The response is the best authoritative name server [adns1.usc.edu](http://adns1.usc.edu). 
 
 ![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2010.png)
+
+When I run `nslookup -type=NS [ucsc.ed](http://ucsc.edu/)u`, the other authoritative DNS servers are: [adns2.ucsc.edu](http://adns2.ucsc.edu) and ns.zocalo.net.
+
+I know this because notice how it does not say “Non-authoritative answer” when I run `nslookup [ucsc.edu](http://ucsc.edu) [adns1.ucsc.edu](http://adns1.ucsc.edu)`, `nslookup [ucsc.edu](http://ucsc.edu) [adns2.ucsc.edu](http://adns1.ucsc.edu)`, or `nslookup [ucsc.edu](http://ucsc.edu) ns.zocalo.net` to query the DNS from adns1.ucsc.edu, adns2.ucsc.edu, or ns.zocalo.net, which indicates that the authoritative DNS servers contains the original zone file. Below is a screenshot proving my findings:
+
+![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2011.png)
+
+mahen3d, HopelessN00b, LinuxBabe, cjccjc, TheLogicGuy, & Apoorv Gunjan Pathak. (2012, August 1). *DNS - NSLOOKUP what is the meaning of the non-authoritative answer?*. Server Fault. https://serverfault.com/questions/413124/dns-nslookup-what-is-the-meaning-of-the-non-authoritative-answer
 
 ### Part 3: TCP
 
@@ -200,7 +206,7 @@ In Frame 52 (SYN-ACK packet), the window size advertised by the server is 65535.
 
 Below is a screenshot of these packets:
 
-![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2011.png)
+![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2012.png)
 
 12. [10 pts] Find a packet from the download with a source of the server and a destination of your computer. Create a tcptrace graph with this packet selected. Take a screenshot of the graph and explain what it is showing. Look into the Wireshark documentation if you need assistance making this graph.
 
@@ -210,7 +216,7 @@ The increasing part of the graph indicates that the transfer rate is increasing,
 
 Below is a screenshot of the tcptrace graph:
 
-![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2012.png)
+![Untitled](Lab%202_%20-%20HTTP,%20DNS,%20and%20TCP%20b7a524c3c02c4af49feee8932f6dc709/Untitled%2013.png)
 
 13. [10 pts] Find a packet from the download with a source of the server and a destination of your computer. Create a tcptrace graph with this packet selected. Take a screenshot of the graph and explain what it is showing. Using an image editting program, circle the areas where the 0% loss is shown, as well as where TCP is in slow-start and congestion-avoidance.
 
