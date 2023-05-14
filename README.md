@@ -7,6 +7,9 @@ Github: Yes
 
 Google Drive: Yes
 
+## Notes
+
+Chapter 1-3: https://nbviewer.org/github/bunfloof/CSE150-UCSC/blob/main/CSE150%20Chap1-3%20OCR%20Orientation-fixed.pdf
 
 ## How to compile everything
 
