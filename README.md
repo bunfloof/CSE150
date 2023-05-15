@@ -7,9 +7,12 @@ Github: Yes
 
 Google Drive: Yes
 
-## Notes
+## Info
 
-Chapter 1-3: https://nbviewer.org/github/bunfloof/CSE150-UCSC/blob/main/CSE150%20Chap1-3%20OCR%20Orientation-fixed.pdf
+- Github does not properly render markdown and TeX on some files.
+- Chapter 1-3 slides: https://nbviewer.org/github/bunfloof/CSE150-UCSC/blob/main/CSE150%20Chap1-3%20OCR%20Orientation-fixed.pdf
+- 
+- https://nbviewer.org/github/bunfloof/CSE150-UCSC
 
 ## How to compile everything
 
