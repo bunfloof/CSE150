@@ -96,13 +96,13 @@ $$
 Recall speed formula,
 
 $$
-\begin{align*}speed&=\frac{distance}{time}\\speed&=2500 \,km\times\frac{1 000\,m}{1\,km}\times\frac{1\,second}{{2.5\cdot10^8\,m}}\\speed&=\boxed{0.01 \, seconds}\end{align*}
+\begin{align*}speed&=\frac{distance}{time}\\ speed&=2500 \,km\times\frac{1 000\,m}{1\,km}\times\frac{1\,second}{{2.5\cdot10^8\,m}}\\ speed&=\boxed{0.01 \, seconds}\end{align*}
 $$
 
 **~~Total delay:~~**
 
 $$
-\begin{aligned}d_{nodal}&=d_{trans}+d_{prop}\\d_{nodal}&=0.004\,s+0.01\,s=0.014\,s\times\frac{1000\,ms}{1\,s}=14\,ms\end{aligned}
+\begin{aligned}d_{nodal}&=d_{trans}+d_{prop}\\ d_{nodal}&=0.004\,s+0.01\,s=0.014\,s\times\frac{1000\,ms}{1\,s}=14\,ms\end{aligned}
 $$
 
 However, the problem is referring to propagation delay, thus the answer is **0.01 seconds** or **1 ms**.
@@ -110,7 +110,7 @@ However, the problem is referring to propagation delay, thus the answer is **0.0
 (b) More generally, how long does it take a packet of length L to propagate over a link of distance d, propagation speed s, and transmission rate R bps?
 
 $$
-\begin{aligned}D_{nodal}&= d_{propogation}\\D_{nodal}&=\frac{d_{distance}}{s_{speed}}\end{aligned}
+\begin{aligned}D_{nodal}&= d_{propogation}\\ D_{nodal}&=\frac{d_{distance}}{s_{speed}}\end{aligned}
 $$
 
 ### **Problem 3**
