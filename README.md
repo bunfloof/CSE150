@@ -11,9 +11,7 @@ Google Drive: Yes
 
 - Github does not properly render markdown and TeX on some files.
 - Chapter 1-3 slides: https://nbviewer.org/github/bunfloof/CSE150-UCSC/blob/main/CSE150%20Chap1-3%20OCR%20Orientation-fixed.pdf
-- 
-- https://nbviewer.org/github/bunfloof/CSE150-UCSC
-
+- PDF Sample Midterm: https://nbviewer.org/github/bunfloof/CSE150-UCSC/tree/main/Sample%20Midterm%20f5398307c41a4a95b7db2012011e2da5.pdf
 ## How to compile everything
 
 Use predefined pipelines. Maybe `bun-beautiful3` ❤️
