@@ -110,7 +110,7 @@ However, the problem is referring to propagation delay, thus the answer is **0.0
 (b) More generally, how long does it take a packet of length L to propagate over a link of distance d, propagation speed s, and transmission rate R bps?
 
 $$
-\begin{aligned}D_{nodal}&= d_{propogation}\\ D_{nodal}&=\frac{d_{distance}}{s_{speed}}\end{aligned}
+\begin{aligned}D_{nodal}&= d_{propogation}\\ &=\frac{d_{distance}}{s_{speed}}\end{aligned}
 $$
 
 ### **Problem 3**
