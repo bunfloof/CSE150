@@ -25,27 +25,27 @@ class Firewall (object):
     
     if packet.find('arp'): # check if packet is ARP
         fm = of.ofp_flow_mod() # create new flow mod message
-        fm.match = of.ofp_match(dl_type=0x0806) # match ARP packets (dl_type=0x0806)
-        fm.idle_timeout = 10 # set idle timeout to 10 seconds
-        fm.hard_timeout = 30 # set hard timeout to 30 seconds
+        fm.match = of.ofp_match.from_packet(packet) # previously match ARP packets (dl_type=0x0806), but now match all unique
+        fm.idle_timeout = 30 # set idle timeout to 30 seconds
+        fm.hard_timeout = 180 # set hard timeout to 180 seconds
         fm.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD)) # flood ARP packet to all ports
         self.connection.send(fm) # send flow mod message to switch
         return
     
     if packet.find('tcp'): # check if packet is TCP
         fm = of.ofp_flow_mod() # create new flow mod message to allow TCP packets
-        fm.match = of.ofp_match(dl_type=0x0800, nw_proto=6) # match TCP packets (dl_type=0x0800, nw_proto=6)
-        fm.idle_timeout = 10 # set idle timeout to 10 seconds
-        fm.hard_timeout = 30 # set hard timeout to 30 seconds
+        fm.match = of.ofp_match.from_packet(packet) # previously match TCP packets (dl_type=0x0800, nw_proto=6), but now match all unique
+        fm.idle_timeout = 30 # set idle timeout to 30 seconds
+        fm.hard_timeout = 180 # set hard timeout to 180 seconds
         fm.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD)) # flood TCP packet to all ports
         self.connection.send(fm) # send the flow mod message to the switch
         return
       
     # if packet not ARP or TCP, then drop it
     fm = of.ofp_flow_mod() # create new flow mod message
-    fm.match = of.ofp_match(dl_type=0x0800) # match IP packets (dl_type=0x0800)
-    fm.idle_timeout = 10 # set idle timeout to 10 seconds
-    fm.hard_timeout = 30 # set hard timeout to 30 seconds
+    fm.match = of.ofp_match.from_packet(packet) # previously match IP packets (dl_type=0x0800), but now match all unique
+    fm.idle_timeout = 30 # set idle timeout to 30 seconds
+    fm.hard_timeout = 180 # set hard timeout to 180 seconds
     fm.priority = 1 # set priority to 1 (lower than default) to ensure this rule is matched last
     fm.actions.append(of.ofp_action_output(port=of.OFPP_NONE)) # do nothing to packet
     self.connection.send(fm) # send flow mod message to switch
