@@ -23,7 +23,7 @@ class Firewall (object):
   def do_firewall (self, packet, packet_in):
     # The code in here will be executed for every packet.
     
-    if packet.find('arp'): # check if packet is ARPPP ARFF ARF ARFFFF *cums*
+    if packet.find('arp'): # check if packet is ARP
         fm = of.ofp_flow_mod() # create new flow mod message
         fm.match = of.ofp_match(dl_type=0x0806) # match ARP packets (dl_type=0x0806)
         fm.idle_timeout = 10 # set idle timeout to 10 seconds
@@ -40,14 +40,14 @@ class Firewall (object):
         fm.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD)) # flood TCP packet to all ports
         self.connection.send(fm) # send the flow mod message to the switch
         return
-    
+      
     # if packet not ARP or TCP, then drop it
     fm = of.ofp_flow_mod() # create new flow mod message
     fm.match = of.ofp_match(dl_type=0x0800) # match IP packets (dl_type=0x0800)
     fm.idle_timeout = 10 # set idle timeout to 10 seconds
     fm.hard_timeout = 30 # set hard timeout to 30 seconds
     fm.priority = 1 # set priority to 1 (lower than default) to ensure this rule is matched last
-    # no actions are added, so packet will be dropped by switch
+    fm.actions.append(of.ofp_action_output(port=of.OFPP_NONE)) # do nothing to packet
     self.connection.send(fm) # send flow mod message to switch
 
   def _handle_PacketIn (self, event):
