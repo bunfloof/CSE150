@@ -55,55 +55,10 @@ class Final (object):
     #      (for example, s1 would have switch_id == 1, s2 would have switch_id == 2, etc...)
     # You should use these to determine where a packet came from. To figure out where a packet 
     # is going, you can use the IP header information.
-  ip_header = packet.find('ipv4')
+    ip_header = packet.find('ipv4')
 
-  if ip_header is None: # Non-IP packet
-    # Flood the packet
-    msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet)
-    msg.idle_timeout = 30
-    msg.hard_timeout = 30
-    msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
-    msg.data = packet_in
-    self.connection.send(msg)
-  else: # IP packet
-    src_ip = ip_header.srcip
-    dst_ip = ip_header.dstip
-    icmp_packet = packet.find('icmp')
-
-    # If the packet is from untrusted host, drop all ICMP packets and any IP traffic to the server.
-    if src_ip == "106.44.82.103" and (icmp_packet is not None or dst_ip == "10.3.9.90"):
-      msg = of.ofp_flow_mod()
-      msg.match = of.ofp_match.from_packet(packet)
-      msg.idle_timeout = 30
-      msg.hard_timeout = 30
-      msg.data = packet_in
-      self.connection.send(msg)
-    # If the packet is from trusted host, drop ICMP packets to hosts in Department B and the server, and any IP traffic to the server.
-    elif src_ip == "108.24.31.112" and ((icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80", "10.3.9.90"]) or dst_ip == "10.3.9.90"):
-      msg = of.ofp_flow_mod()
-      msg.match = of.ofp_match.from_packet(packet)
-      msg.idle_timeout = 30
-      msg.hard_timeout = 30
-      msg.data = packet_in
-      self.connection.send(msg)
-    # If the packet is from hosts in Department A, drop ICMP packets to hosts in Department B.
-    elif src_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"] and icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"]:
-      msg = of.ofp_flow_mod()
-      msg.match = of.ofp_match.from_packet(packet)
-      msg.idle_timeout = 30
-      msg.hard_timeout = 30
-      msg.data = packet_in
-      self.connection.send(msg)
-    # If the packet is from hosts in Department B, drop ICMP packets to hosts in Department A.
-    elif src_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"] and icmp_packet is not None and dst_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"]:
-      msg = of.ofp_flow_mod()
-      msg.match = of.ofp_match.from_packet(packet)
-      msg.idle_timeout = 30
-      msg.hard_timeout = 30
-      msg.data = packet_in
-      self.connection.send(msg)
-    else: # Other cases, forward the packets
+    if ip_header is None: # Non-IP packet
+      # Flood the packet
       msg = of.ofp_flow_mod()
       msg.match = of.ofp_match.from_packet(packet)
       msg.idle_timeout = 30
@@ -111,6 +66,51 @@ class Final (object):
       msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
       msg.data = packet_in
       self.connection.send(msg)
+    else: # IP packet
+      src_ip = ip_header.srcip
+      dst_ip = ip_header.dstip
+      icmp_packet = packet.find('icmp')
+
+      # If the packet is from untrusted host, drop all ICMP packets and any IP traffic to the server.
+      if src_ip == "106.44.82.103" and (icmp_packet is not None or dst_ip == "10.3.9.90"):
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 30
+        msg.hard_timeout = 30
+        msg.data = packet_in
+        self.connection.send(msg)
+      # If the packet is from trusted host, drop ICMP packets to hosts in Department B and the server, and any IP traffic to the server.
+      elif src_ip == "108.24.31.112" and ((icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80", "10.3.9.90"]) or dst_ip == "10.3.9.90"):
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 30
+        msg.hard_timeout = 30
+        msg.data = packet_in
+        self.connection.send(msg)
+      # If the packet is from hosts in Department A, drop ICMP packets to hosts in Department B.
+      elif src_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"] and icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"]:
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 30
+        msg.hard_timeout = 30
+        msg.data = packet_in
+        self.connection.send(msg)
+      # If the packet is from hosts in Department B, drop ICMP packets to hosts in Department A.
+      elif src_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"] and icmp_packet is not None and dst_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"]:
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 30
+        msg.hard_timeout = 30
+        msg.data = packet_in
+        self.connection.send(msg)
+      else: # Other cases, forward the packets
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 30
+        msg.hard_timeout = 30
+        msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+        msg.data = packet_in
+        self.connection.send(msg)
 
   def _handle_PacketIn (self, event):
     """
