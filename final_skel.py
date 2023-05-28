@@ -64,28 +64,28 @@ class final_topo(Topo):
 
     # Connections
     # floor 1
-    self.addLink(h10, s1)
-    self.addLink(h20, s1)
-    self.addLink(h30, s2)
-    self.addLink(h40, s2)
-    self.addLink(s1, s5)
-    self.addLink(s2, s5)
+    self.addLink(h10, s1, port1=0, port2=1)
+    self.addLink(h20, s1, port1=0, port2=2)
+    self.addLink(h30, s2, port1=0, port2=1)
+    self.addLink(h40, s2, port1=0, port2=2)
+    self.addLink(s1, s5, port1=3, port2=1)
+    self.addLink(s2, s5, port1=3, port2=2)
 
     # floor 2
-    self.addLink(h50, s3)
-    self.addLink(h60, s3)
-    self.addLink(h70, s4)
-    self.addLink(h80, s4)
-    self.addLink(s3, s5)
-    self.addLink(s4, s5)
+    self.addLink(h50, s3, port1=0, port2=1)
+    self.addLink(h60, s3, port1=0, port2=2)
+    self.addLink(h70, s4, port1=0, port2=1)
+    self.addLink(h80, s4, port1=0, port2=2)
+    self.addLink(s3, s5, port1=3, port2=3)
+    self.addLink(s4, s5, port1=3, port2=4)
 
     # external Hosts and Server
-    self.addLink(h_trust, s6)
-    self.addLink(h_untrust, s6)
-    self.addLink(h_server, s5)
+    self.addLink(h_trust, s6, port1=0, port2=1)
+    self.addLink(h_untrust, s6, port1=0, port2=2)
+    self.addLink(h_server, s5, port1=0, port2=5)
 
     # connection between Core Switch and External Switch
-    self.addLink(s5, s6)
+    self.addLink(s5, s6, port1=6, port2=3)
 
 def configure():
   topo = final_topo()
