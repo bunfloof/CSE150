@@ -77,7 +77,7 @@ class Final (object):
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 60
         msg.hard_timeout = 60
-        fm.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+        msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
       # If the packet is from trusted host, drop ICMP packets to hosts in Department B and the server, and any IP traffic to the server.
@@ -86,7 +86,7 @@ class Final (object):
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 60
         msg.hard_timeout = 60
-        fm.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+        msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
       # If the packet is from hosts in Department A, drop ICMP packets to hosts in Department B.
@@ -95,7 +95,7 @@ class Final (object):
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 60
         msg.hard_timeout = 60
-        fm.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+        msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
       # If the packet is from hosts in Department B, drop ICMP packets to hosts in Department A.
@@ -104,7 +104,7 @@ class Final (object):
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 60
         msg.hard_timeout = 60
-        fm.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+        msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
       else: # Other cases, forward the packets
