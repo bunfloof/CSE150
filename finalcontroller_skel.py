@@ -61,8 +61,8 @@ class Final (object):
       # Flood the packet
       msg = of.ofp_flow_mod()
       msg.match = of.ofp_match.from_packet(packet)
-      msg.idle_timeout = 60
-      msg.hard_timeout = 60
+      msg.idle_timeout = 300
+      msg.hard_timeout = 600
       msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
       msg.data = packet_in
       self.connection.send(msg)
@@ -75,8 +75,8 @@ class Final (object):
       if src_ip == "106.44.82.103" and (icmp_packet is not None or dst_ip == "10.3.9.90"):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
-        msg.idle_timeout = 60
-        msg.hard_timeout = 60
+        msg.idle_timeout = 300
+        msg.hard_timeout = 600
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -84,8 +84,8 @@ class Final (object):
       elif src_ip == "108.24.31.112" and ((icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80", "10.3.9.90"]) or dst_ip == "10.3.9.90"):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
-        msg.idle_timeout = 60
-        msg.hard_timeout = 60
+        msg.idle_timeout = 300
+        msg.hard_timeout = 600
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -93,8 +93,8 @@ class Final (object):
       elif src_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"] and icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"]:
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
-        msg.idle_timeout = 60
-        msg.hard_timeout = 60
+        msg.idle_timeout = 300
+        msg.hard_timeout = 600
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -102,16 +102,16 @@ class Final (object):
       elif src_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"] and icmp_packet is not None and dst_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"]:
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
-        msg.idle_timeout = 60
-        msg.hard_timeout = 60
+        msg.idle_timeout = 300
+        msg.hard_timeout = 600
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
       else: # Other cases, forward the packets
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
-        msg.idle_timeout = 60
-        msg.hard_timeout = 60
+        msg.idle_timeout = 300
+        msg.hard_timeout = 600
         msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
         msg.data = packet_in
         self.connection.send(msg)
