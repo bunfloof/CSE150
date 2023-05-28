@@ -62,7 +62,7 @@ class Final (object):
       msg = of.ofp_flow_mod()
       msg.match = of.ofp_match.from_packet(packet)
       msg.idle_timeout = 300
-      msg.hard_timeout = 600
+      msg.hard_timeout = 720
       msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
       msg.data = packet_in
       self.connection.send(msg)
@@ -76,7 +76,7 @@ class Final (object):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 300
-        msg.hard_timeout = 600
+        msg.hard_timeout = 720
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -85,7 +85,7 @@ class Final (object):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 300
-        msg.hard_timeout = 600
+        msg.hard_timeout = 720
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -94,7 +94,7 @@ class Final (object):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 300
-        msg.hard_timeout = 600
+        msg.hard_timeout = 720
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -103,7 +103,7 @@ class Final (object):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 300
-        msg.hard_timeout = 600
+        msg.hard_timeout = 720
         msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
         msg.data = packet_in
         self.connection.send(msg)
@@ -111,7 +111,7 @@ class Final (object):
         msg = of.ofp_flow_mod()
         msg.match = of.ofp_match.from_packet(packet)
         msg.idle_timeout = 300
-        msg.hard_timeout = 600
+        msg.hard_timeout = 720
         msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
         msg.data = packet_in
         self.connection.send(msg)
