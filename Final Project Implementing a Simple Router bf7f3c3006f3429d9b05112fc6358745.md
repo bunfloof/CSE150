@@ -57,7 +57,7 @@ The output of the **`pingall`** command demonstrates that the hosts can communic
 
 ### Rules installed in flow table
 
-The output of the **`dpctl dump-flows`** command shows several flows in the flow table, indicating that I’ve successfully installed rules in the flow table. Below is a screenshot of the output:
+After I generated some traffic using `pingall`, I immediately ran `dpctl dump-flows` to show the active flow entries installed in all switches before they expire due to the idle_timeout or hard_timeout specified in my of_flow_mod (idle_timeout = 300, hard_timeout = 720). Each entry in the output represents a flow rule that the switch has set up to handle packets in the network.
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%202.png)
 
