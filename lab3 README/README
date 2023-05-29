@@ -6,7 +6,7 @@
 
 {{process.env.studentid}}
 
-# Lab 3: Installing and Using Mininet
+# Final Project: Implementing a Simple Router
 
 ## Description
 
@@ -16,19 +16,28 @@ This lab will introduce the user to Software-Defined Networking (SDN) and the Op
 
 ```
 .
-├── lab3.pdf                # Contains screenshots of required commands       
-├── lab3controller.py       # Firewall code
-└── README
+├── project.pdf                # Contains explanations and screenshots of required commands    
+├── final_skel.py              # Topology code
+├── finalcontroller_skel.py    # Controller code
+└── README.txt
 ```
 
 ## Instructions
 
 To test the code, please follow the instruction below:
 
-1. Place `lab3controller.py` in ~/pox/pox/misc directory.
+1. Place `finalcontroller_skel.py` in ~/pox/pox/misc directory.
 
 2. Launch controller.
 
 ```
-sudo ~/pox/pox.py misc.lab3controller
+sudo ~/pox/pox.py misc.finalcontroller_skel
+```
+
+3. Place `final_skel.py` in ~ directory.
+
+4. Launch topology.
+
+```
+sudo python final_skel.py
 ```
