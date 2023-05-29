@@ -2,7 +2,9 @@
 
 published: No
 
-The assignment's requirements involve creating a complex network topology within Mininet, consisting of several hosts and switches, each with their respective IP addresses and connections. Here's a comprehensive analysis of the implementation and verification of these requirements.
+The assignment's requirements involve creating a simple network topology within Mininet, consisting of several hosts and switches, each with their respective IP addresses and connections. 
+
+Here's a comprehensive analysis of the implementation and verification of these requirements:
 
 ### Devices are successfully created
 
@@ -25,7 +27,14 @@ The successful establishment of links between the devices and the accuracy of th
 
 ![vmware_aZdAWNQj77.png](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/vmware_aZdAWNQj77.png)
 
-As shown in the screenshot above, all the hosts are correctly connected to their respective switches, and the switches are also connected as per the topology described in the assignment.
+As shown in the screenshot above, all the hosts are correctly connected to their respective switches, and the switches are also connected as per the topology described in the assignment:
+
+- "Floor 1, Switch 1" and "Floor 2, Switch 2", "Trusted Host 108.24.31.112/24", and "Untrusted Host 106.44.82.103/24" connected to a "Core Switch".
+- “Host 10, 10.1.1.10/24" and "Host 20, 10.1.2.20/24" are connected to "Floor 1, Switch 1".
+- "Host 50, 10.2.5.50/24" and "Host 60, 10.2.6.60/24" are connected to "Floor 2, Switch 1".
+- "Host 30, 10.1.3.30/24" and "Host 40, 10.1.4.40/24" are connected to "Floor 1, Switch 2".
+- "Host 70, 10.2.7.70/24" and "Host 80, 10.2.8.80/24" are connected to "Floor 2, Switch 2".
+- "Core Switch" is connected to "Data Center Switch", which is connected to "Server 10.3.9.90/24".
 
 The links are marked as 'OK OK', indicating that the connections are up and running correctly. There are no broken or misconnected links in the network, further establishing the correctness of the topology.
 
@@ -67,7 +76,7 @@ My code complies with the rubric's requirement to not use **`OFPP_FLOOD`** for I
 
 ### Untrusted Host cannot send ICMP traffic to Host 10 to 80
 
-The **`ping`** command results show that the untrusted host (h_untrust) cannot send ICMP packets to any other host. This confirms that you have successfully blocked ICMP traffic from the untrusted host, satisfying the assignment requirements. Below is a screenshot of my output:
+The **`ping`** command results show that the untrusted host (h_untrust) cannot send ICMP packets to any other host. This confirms that I have successfully blocked ICMP traffic from the untrusted host, satisfying the assignment requirements. Below is a screenshot of my output:
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%203.png)
 

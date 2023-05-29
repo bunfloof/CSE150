@@ -1,0 +1,232 @@
+Final Project: Implementing a Simple Router
+In the previous lab you implemented a simple firewall that allowed ARP and TCP packets, but blocked all other packets. For your final project, you will be expanding on this to implement routing between devices on different subnets and implementing firewalls for certain subnets. The idea is to simulate an actual production network. You will be using ideas from Lab 1 to help construct the mininet topology, and ideas from Lab 3 to implement the rules allowing for traffic to flow through your network. Please refer back to those Labs for guidance on how to complete this assignment. Assignment: For this lab, we will be constructing a network for a small company. The company has a 2-floor building, with each floor having its own switches and subnets. Additionally, we have a switch and subnet for all the servers in the data center, and a core switch connecting everything together.
+
+Your device’s roles and IP addresses are as follows:
+(1)
+Device: Floor 1 Hosts
+Mininet Name: h10, h20, h30, h40
+IP Address: 10.1.1.10/24, 10.1.2.20/24, 10.1.3.30/24, 10.1.4.40/24
+Description: Computers on floor 1 of the Department A in the company.
+-
+(2)
+Device: Floor 2 Hosts
+Mininet Name: h50, h60, h70, h80
+IP Address: 10.2.5.50/24, 10.2.6.60/24, 10.2.7.70/24, 10.2.8.80/24
+Description: Computers on floor 2 of the Department B in the company.
+-
+(3)
+Device: Trusted Host
+Mininet Name: h_trust
+IP Address: 108.24.31.112/24
+Description: A trusted computer outside our network. This host is owned by certified employee from Department A.
+-
+(4)
+Device: Untrusted Host
+Mininet Name: h_untrust
+IP Address: 106.44.82.103/24 
+Description: An untrusted computer outside our network. We treat this computer as a potential hacker.
+-
+(5)
+Device: Server
+Mininet Name: h_server
+IP Address: 10.3.9.90/24
+Description: A server used by our internal or trusted hosts.
+
+The topology will look as follows:
+A diagram of "Floor 1, Switch 1" and "Floor 2, Switch 2", "Trusted Host 108.24.31.112/24", and "Untrusted Host 106.44.82.103/24" connected to a "Core Switch". 
+"Host 10, 10.1.1.10/24" and "Host 20, 10.1.2.20/24" are connected to "Floor 1, Switch 1".
+"Host 50, 10.2.5.50/24" and "Host 60, 10.2.6.60/24" are connected to "Floor 2, Switch 1".
+"Host 30, 10.1.3.30/24" and "Host 40, 10.1.4.40/24" are connected to "Floor 1, Switch 2".
+"Host 70, 10.2.7.70/24" and "Host 80, 10.2.8.80/24" are connected to "Floor 2, Switch 2".
+The "Core Switch" is connected to "Data Center Switch" which is connected to "Server 10.3.9.90/24"
+
+Your goal will be to allow or block traffic between the hosts and servers. In this assignment, you will be allowed (and encouraged) to flood all non-IP traffic in the same method that you did in Lab 3 (using a destination port of of.OFPP_FLOOD). However, you will need to specify specific ports for all IP traffic. You may do this however you choose-- however, you may find it easiest to determine the correct destination port by using the destination IP address and source IP address, as well as the source port on the switch that the packet originated from. Additional information has been given to you in the do_final() function to allow you to make these decisions. Please see the comments in the provided code for guidance.
+
+-
+Requirements:
+To protect our servers from the untrusted Internet, we will be blocking all IP traffic from the Untrusted Host to the Server. To block the Internet from discovering our internal IP addresses, we will also block all ICMP traffic from the Untrusted Host to anywhere internally (i.e., Host 10-80 and the Server). For the trusted host, it can send any traffic to the hosts in the Department A (Host 10, 20, 30, 40). Meanwhile, similar as the untrusted host, the trusted host cannot send any ICMP and IP traffic to the server, and it cannot send ICMP traffic to the hosts in the Department B (Host 50, 60, 70, 80). Additionally, all ICMP traffic from the hosts in Department A (Host 10, 20, 30, 40) to the hosts in Department B (Host 50, 60, 70, 80) should be blocked and vice versa.
+
+In your report, you will need to explain how you implemented the various requirements and show that they work properly with screenshots. If you need help figuring out how to do this, look back to previous assignments and see how you tested them.
+
+-
+Provided Code:
+File final_skel.py:
+```
+#!/usr/bin/python
+
+from mininet.topo import Topo
+from mininet.net import Mininet
+from mininet.util import dumpNodeConnections
+from mininet.log import setLogLevel
+from mininet.cli import CLI
+from mininet.node import RemoteController
+
+class final_topo(Topo):
+  def build(self):
+    # Examples!
+    # Create a host with a default route of the ethernet interface. You'll need to set the
+    # default gateway like this for every host you make on this assignment to make sure all 
+    # packets are sent out that port. Make sure to change the h# in the defaultRoute area
+    # and the MAC address when you add more hosts!
+    # h1 = self.addHost('h1',mac='00:00:00:00:00:01',ip='1.1.1.1/24', defaultRoute="h1-eth0")
+    # h2 = self.addHost('h2',mac='00:00:00:00:00:02',ip='2.2.2.2/24', defaultRoute="h2-eth0")
+
+    # Create a switch. No changes here from Lab 1.
+    # s1 = self.addSwitch('s1')
+
+    # Connect Port 8 on the Switch to Port 0 on Host 1 and Port 9 on the Switch to Port 0 on 
+    # Host 2. This is representing the physical port on the switch or host that you are 
+    # connecting to.
+    #
+    # IMPORTANT NOTES: 
+    # - On a single device, you can only use each port once! So, on s1, only 1 device can be
+    #   plugged in to port 1, only one device can be plugged in to port 2, etc.
+    # - On the "host" side of connections, you must make sure to always match the port you 
+    #   set as the default route when you created the device above. Usually, this means you 
+    #   should plug in to port 0 (since you set the default route to h#-eth0).
+    #
+    # self.addLink(s1,h1, port1=8, port2=0)
+    # self.addLink(s1,h2, port1=9, port2=0)
+
+    print "Delete me!"
+
+def configure():
+  topo = final_topo()
+  net = Mininet(topo=topo, controller=RemoteController)
+  net.start()
+
+  CLI(net)
+  
+  net.stop()
+
+
+if __name__ == '__main__':
+  configure()
+
+```
+File finalcontroller_skel.py:
+```
+# Final Skeleton
+#
+# Hints/Reminders from Lab 3:
+#
+# To check the source and destination of an IP packet, you can use
+# the header information... For example:
+#
+# ip_header = packet.find('ipv4')
+#
+# if ip_header.srcip == "1.1.1.1":
+#   print "Packet is from 1.1.1.1"
+#
+# Important Note: the "is" comparison DOES NOT work for IP address
+# comparisons in this way. You must use ==.
+# 
+# To send an OpenFlow Message telling a switch to send packets out a
+# port, do the following, replacing <PORT> with the port number the 
+# switch should send the packets out:
+#
+#    msg = of.ofp_flow_mod()
+#    msg.match = of.ofp_match.from_packet(packet)
+#    msg.idle_timeout = 30
+#    msg.hard_timeout = 30
+#
+#    msg.actions.append(of.ofp_action_output(port = <PORT>))
+#    msg.data = packet_in
+#    self.connection.send(msg)
+#
+# To drop packets, simply omit the action.
+#
+
+from pox.core import core
+import pox.openflow.libopenflow_01 as of
+
+log = core.getLogger()
+
+class Final (object):
+  """
+  A Firewall object is created for each switch that connects.
+  A Connection object for that switch is passed to the __init__ function.
+  """
+  def __init__ (self, connection):
+    # Keep track of the connection to the switch so that we can
+    # send it messages!
+    self.connection = connection
+
+    # This binds our PacketIn event listener
+    connection.addListeners(self)
+
+  def do_final (self, packet, packet_in, port_on_switch, switch_id):
+    # This is where you'll put your code. The following modifications have 
+    # been made from Lab 3:
+    #   - port_on_switch: represents the port that the packet was received on.
+    #   - switch_id represents the id of the switch that received the packet.
+    #      (for example, s1 would have switch_id == 1, s2 would have switch_id == 2, etc...)
+    # You should use these to determine where a packet came from. To figure out where a packet 
+    # is going, you can use the IP header information.
+    print "Example code."
+
+  def _handle_PacketIn (self, event):
+    """
+    Handles packet in messages from the switch.
+    """
+    packet = event.parsed # This is the parsed packet data.
+    if not packet.parsed:
+      log.warning("Ignoring incomplete packet")
+      return
+
+    packet_in = event.ofp # The actual ofp_packet_in message.
+    self.do_final(packet, packet_in, event.port, event.dpid)
+
+def launch ():
+  """
+  Starts the component
+  """
+  def start_switch (event):
+    log.debug("Controlling %s" % (event.connection,))
+    Final(event.connection)
+  core.openflow.addListenerByName("ConnectionUp", start_switch)
+
+```
+
+We have provided you with starter code (skeleton files) to get you started on this assignment. The controller file (final_controller_skel.py) needs to be placed in ~/pox/pox/misc, and the mininet file (final.py) should be placed in your home directory (~). This time, you will need to modify both files to meet the lab requirements.
+
+You will be using slightly different commands to create the Hosts and Links in the Mininet file to give you more information to make decisions within the Controller file. Additionally, you will notice that you have additional information provided in the do_final function. This is documented in the comments within the files.
+
+-
+Summary of Goals:
+- Create a Mininet Topology (See Lab 1 for help) to represent the above topology.
+- Create a Pox controller (See Lab 3 for help) with the following features:
+- All hosts are able to communicate, EXCEPT:
+- Untrusted Host cannot send ICMP traffic to Host 10 to 80, or the Server.
+- Untrusted Host cannot send any IP traffic to the Server.
+- Trusted Host cannot send ICMP traffic to Host 50 to 80 in Department B, or the Server.
+- Trusted Host cannot send any IP traffic to the Server.
+- Hosts in Department A (Host 10 to 40) cannot send any ICMP traffic to the hosts in Department B (Host 50 to 80), and vice versa.
+
+-
+Testing:
+You may test with mininet commands and observing packets with Wireshark inside your VM. Please have a detailed illustration (with screenshots) about how you tested your codes in the report.
+
+-
+Grading Rubric:
+20 points: Mininet Topology (use proper mininet commands and screenshots to justify in your report)
+10: Devices are successfully created.
+10: Links are successfully created, and the topology is correct.
+10: IP addresses are correct
+60 points: Pox Controller (use proper mininet commands and screenshots to justify in your report)
+20: Hosts can communicate.
+10 point deduction if rules not installed in flow table.
+10 point deduction if IP traffic is implemented using OFPP_FLOOD.
+10: Untrusted Host cannot send ICMP traffic to Host 10 to 80
+5 point deduction if Untrusted Host cannot send ANY traffic to the hosts.
+10: Untrusted/Trust Host cannot send any traffic to Server
+10: Trusted Host cannot send ICMP traffic to Host 50 to 80
+5 point deduction if Trusted Host cannot send ICMP traffic to Host 10 to 40
+10: Host 10 to 40 cannot send ICMP traffic to Host 50 to 80
+20 points: Quality of the report.
+Credits are given based on the clarity of your illustration and result justification. You must include screenshots proving your code works. These screenshots must come from your own code. This will be tested and submitting screenshots of someone else’s code can be considered an academic integrity violation. Note that for the report, we will not be telling you what commands to run to verify the assignment goals are met. Figuring out how to prove your work is a part of this assignment. A good report should comprehensively analyze the correctness of your implementation and present the results in a clear way. You could follow the “Summary of Goals” or the “Grading Rubric” to decide how to demonstrate your implementation in the report.
+
+Deliverables:
+1. project.pdf: See instructions above.
+2. final_skel.py: Your topology code.
+3. finalcontroller_skel.py: Your controller code.
