@@ -8,11 +8,11 @@ Here's a comprehensive analysis of the implementation and verification of these 
 
 ### 1. Devices are successfully created
 
-The successful creation of the devices in the topology can be confirmed by running the **`dump`** command within the Mininet CLI. 
+The successful creation of the devices in the topology can be confirmed by running the **`dump`** command.
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled.png)
 
-As seen from the screenshot above, there are 11 hosts and 6 switches in the network, which matches the requirements of the topology described in the assignment:
+As shown from the screenshot above, there are 11 hosts and 6 switches in the network, which matches the requirements of the topology described in the assignment:
 
 - 8 hosts, named from h10 to h80
 - 2 special hosts: trusted (h_trust) and untrusted (h_untrust)
@@ -23,7 +23,7 @@ These devices also have the correct process IDs associated with them, which furt
 
 ### 2. Links are successfully created, and the topology is correct
 
-The successful establishment of links between the devices and the accuracy of the topology can be verified by running the **`links`** command within the Mininet CLI. 
+The successful establishment of links between the devices and the accuracy of the topology can be verified by running the **`links`** command.
 
 ![vmware_aZdAWNQj77.png](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/vmware_aZdAWNQj77.png)
 
@@ -66,7 +66,7 @@ The output of the **`pingall`** command demonstrates that the hosts can communic
 
 ### 5. Rules installed in flow table
 
-After I generated some traffic using `pingall`, I immediately ran `dpctl dump-flows` to show the active flow entries installed in all switches before they expire due to the idle_timeout or hard_timeout specified in my of_flow_mod (idle_timeout = 300, hard_timeout = 720). Each entry in the output represents a flow rule that the switch has set up to handle packets in the network.
+After I generated some traffic using `pingall`, I immediately ran `dpctl dump-flows` to show the active flow entries installed in all switches before they expire due to the idle_timeout or hard_timeout specified in my of_flow_mod (idle_timeout = 300, hard_timeout = 720). Each entry in the output represents a flow rule that the switch has set up to handle packets in the network. There are too many flows that I can’t list them all here. Below is a screenshot of my output:
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%202.png)
 
@@ -94,18 +94,18 @@ The `ping` attempts from both the trusted and untrusted host to the server resul
 
 ### 10. Trusted Host cannot send ICMP traffic to Host 50 to 80
 
-The `ping` attempts from the trusted host to hosts 50, 60, 70, and 80 also resulted in 100% packet loss. This shows that the controller is successfully blocking ICMP traffic from the trusted host to these hosts.
+The `ping` attempts from the trusted host to hosts 50, 60, 70, and 80 also resulted in 100% packet loss. This shows that the controller is successfully blocking ICMP traffic from the trusted host to these hosts. Below is a screenshot of my output:
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%206.png)
 
-### —Trusted Host can send ICMP traffic to Host 10 to 40
+### 11. Trusted Host can send ICMP traffic to Host 10 to 40
 
-The `ping` attempts from the trusted host to hosts 10, 20, 30, and 40 were successful, with a packet loss of 0%. This demonstrates that ICMP traffic from the trusted host to these hosts is allowed by the controller.
+The `ping` attempts from the trusted host to hosts 10, 20, 30, and 40 were successful, with a packet loss of 0%. This demonstrates that ICMP traffic from the trusted host to these hosts is allowed by the controller. Below is a screenshot of my output:
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%207.png)
 
-### Host 10 to 40 cannot send ICMP traffic to Host 50 to 80
+### 12. Host 10 to 40 cannot send ICMP traffic to Host 50 to 80
 
-The `ping` attempts from hosts 10, 20, 30, and 40 to hosts 50, 60, 70, and 80 resulted in 100% packet loss. This shows that the SDN controller is successfully blocking ICMP traffic from hosts 10 to 40 to hosts 50 to 80.
+The `ping` attempts from hosts 10, 20, 30, and 40 to hosts 50, 60, 70, and 80 resulted in 100% packet loss. This shows that the SDN controller is successfully blocking ICMP traffic from hosts 10 to 40 to hosts 50 to 80. Below is a screenshot of my output:
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%208.png)
