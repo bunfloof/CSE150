@@ -87,18 +87,34 @@ class Final (object):
             if (ip_packet.srcip in ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40'] and ip_packet.dstip in ['10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80']) or (ip_packet.srcip in ['10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80'] and ip_packet.dstip in ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40']):
                 return
 
-    msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet)
-    msg.idle_timeout = 300
-    msg.hard_timeout = 720
-    msg.data = packet_in
-    # Send to all ports except the input port
-    for port in self.connection.ports:
-        if port != port_on_switch:
-            action = of.ofp_action_output(port = port)
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 300
+        msg.hard_timeout = 720
+        msg.data = packet_in
+
+        # ip_to_port dictionary needs to be initialized appropriately for each switch
+        ip_to_port = {
+            '10.1.1.10': 1, # port at s1
+            '10.1.2.20': 2, # port at s1
+            '10.1.3.30': 1, # port at s2
+            '10.1.4.40': 2, # port at s2
+            '10.2.5.50': 1, # port at s3
+            '10.2.6.60': 2, # port at s3
+            '10.2.7.70': 1, # port at s4
+            '10.2.8.80': 2, # port at s4
+            '108.24.31.112': 1, # port at s6
+            '106.44.82.103': 2, # port at s6
+            '10.3.9.90': 5  # port at s5
+        }
+        
+        # check if the destination IP is known and in ip_to_port dictionary
+        if ip_packet.dstip in ip_to_port:
+            action = of.ofp_action_output(port = ip_to_port[ip_packet.dstip])
             msg.actions.append(action)
 
-    self.connection.send(msg)
+        self.connection.send(msg)
+
 
   def _handle_PacketIn (self, event):
     """
