@@ -84,8 +84,8 @@ class Final (object):
 
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet)
-    msg.idle_timeout = 30
-    msg.hard_timeout = 30
+    msg.idle_timeout = 300
+    msg.hard_timeout = 720
     msg.data = packet_in
     # Send to all ports except the input port
     for port in self.connection.ports:
