@@ -68,6 +68,11 @@ class Final (object):
             if ip_packet.dstip in ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40', '10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80', '10.3.9.90']:
                 return
 
+        # Block ICMP traffic between trusted host and untrusted host
+        if icmp_packet is not None:
+            if (ip_packet.srcip == '108.24.31.112' and ip_packet.dstip == '106.44.82.103') or (ip_packet.srcip == '106.44.82.103' and ip_packet.dstip == '108.24.31.112'):
+                return
+
         # Block IP and ICMP traffic from trusted host to the server
         if ip_packet.srcip == '108.24.31.112' and ip_packet.dstip == '10.3.9.90':
             return
