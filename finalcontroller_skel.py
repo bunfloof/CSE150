@@ -55,65 +55,71 @@ class Final (object):
     #      (for example, s1 would have switch_id == 1, s2 would have switch_id == 2, etc...)
     # You should use these to determine where a packet came from. To figure out where a packet 
     # is going, you can use the IP header information.
+    # determine the source and destination IP addresses
     ip_packet = packet.find('ipv4')
+    if not ip_packet:
+        # Not an IP packet, flood
+        self.send_packet(packet_in.buffer_id, packet_in.data, of.OFPP_FLOOD, switch_id)
+        return
+
     icmp_packet = packet.find('icmp')
+    tcp_packet = packet.find('tcp')
+    udp_packet = packet.find('udp')
 
-    if ip_packet is not None:
-        # Block IP traffic from untrusted host to the server
-        if ip_packet.srcip == '106.44.82.103' and ip_packet.dstip == '10.3.9.90':
-            return
+    # Assign host IPs to port numbers for each switch
+    ip_to_port = {
+        '10.1.1.10': 1 if switch_id == 1 else 1 if switch_id == 5 else None,
+        '10.1.2.20': 2 if switch_id == 1 else 1 if switch_id == 5 else None,
+        '10.1.3.30': 1 if switch_id == 2 else 2 if switch_id == 5 else None,
+        '10.1.4.40': 2 if switch_id == 2 else 2 if switch_id == 5 else None,
+        '10.2.5.50': 1 if switch_id == 3 else 3 if switch_id == 5 else None,
+        '10.2.6.60': 2 if switch_id == 3 else 3 if switch_id == 5 else None,
+        '10.2.7.70': 1 if switch_id == 4 else 4 if switch_id == 5 else None,
+        '10.2.8.80': 2 if switch_id == 4 else 4 if switch_id == 5 else None,
+        '10.3.9.90': 5 if switch_id == 5 else None,
+        '108.24.31.112': 1 if switch_id == 6 else 6 if switch_id == 5 else None,
+        '106.44.82.103': 2 if switch_id == 6 else 6 if switch_id == 5 else None,
+    }
 
-        # Block ICMP traffic from untrusted host to internal hosts and server
-        if icmp_packet is not None and ip_packet.srcip == '106.44.82.103':
-            return
+    msg = of.ofp_flow_mod()
+    msg.match = of.ofp_match.from_packet(packet)
 
-        # Block ICMP traffic between trusted host and untrusted host
-        if icmp_packet is not None:
-            if (ip_packet.srcip == '108.24.31.112' and ip_packet.dstip == '106.44.82.103') or (ip_packet.srcip == '106.44.82.103' and ip_packet.dstip == '108.24.31.112'):
+    # When the IP address of the destination host is known
+    if str(ip_packet.dstip) in ip_to_port and ip_to_port[str(ip_packet.dstip)] is not None:
+        # Rules for Untrusted Host (106.44.82.103)
+        if str(ip_packet.srcip) == '106.44.82.103':
+            # Untrusted Host cannot send ICMP traffic to Host 10 to 80, or the Server.
+            if icmp_packet or str(ip_packet.dstip) == '10.3.9.90':
                 return
-
-        # Block IP and ICMP traffic from trusted host to the server
-        if ip_packet.srcip == '108.24.31.112' and ip_packet.dstip == '10.3.9.90':
-            return
-
-        # Block ICMP traffic from trusted host to Department B
-        if icmp_packet is not None and ip_packet.srcip == '108.24.31.112':
-            return
-
-        # Block ICMP traffic between Department A and Department B
-        if icmp_packet is not None:
-            if (ip_packet.srcip in ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40'] and ip_packet.dstip in ['10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80']) or (ip_packet.srcip in ['10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80'] and ip_packet.dstip in ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40']):
+        # Rules for Trusted Host (108.24.31.112)
+        if str(ip_packet.srcip) == '108.24.31.112':
+            # Trusted Host cannot send ICMP traffic to Host 50 to 80 in Department B, or the Server.
+            if icmp_packet and (str(ip_packet.dstip).startswith('10.2') or str(ip_packet.dstip) == '10.3.9.90'):
                 return
+        # Hosts in Department A (Host 10 to 40) cannot send any ICMP traffic to the hosts in Department B (Host 50 to 80), and vice versa.
+        if icmp_packet and ((str(ip_packet.srcip).startswith('10.1') and str(ip_packet.dstip).startswith('10.2')) or (str(ip_packet.srcip).startswith('10.2') and str(ip_packet.dstip).startswith('10.1'))):
+            return
+    # When the IP address of the destination host is known
+    if str(ip_packet.dstip) in ip_to_port and ip_to_port[str(ip_packet.dstip)] is not None:
+        # Rules for Untrusted Host (106.44.82.103)
+        if str(ip_packet.srcip) == '106.44.82.103':
+            # Untrusted Host cannot send ICMP traffic to Host 10 to 80, or the Server.
+            if icmp_packet or str(ip_packet.dstip) == '10.3.9.90':
+                return
+        # Rules for Trusted Host (108.24.31.112)
+        if str(ip_packet.srcip) == '108.24.31.112':
+            # Trusted Host cannot send ICMP traffic to Host 50 to 80 in Department B, or the Server.
+            if icmp_packet and (str(ip_packet.dstip).startswith('10.2') or str(ip_packet.dstip) == '10.3.9.90'):
+                return
+        # Hosts in Department A (Host 10 to 40) cannot send any ICMP traffic to the hosts in Department B (Host 50 to 80), and vice versa.
+        if icmp_packet and ((str(ip_packet.srcip).startswith('10.1') and str(ip_packet.dstip).startswith('10.2')) or (str(ip_packet.srcip).startswith('10.2') and str(ip_packet.dstip).startswith('10.1'))):
+            return
 
-        msg = of.ofp_flow_mod()
-        msg.match = of.ofp_match.from_packet(packet)
-        msg.idle_timeout = 300
-        msg.hard_timeout = 720
-        msg.data = packet_in
-
-        ip_to_port = {
-          '10.1.1.10': 1 if switch_id == 1 else 1 if switch_id == 5 else None,
-          '10.1.2.20': 2 if switch_id == 1 else 1 if switch_id == 5 else None,
-          '10.1.3.30': 1 if switch_id == 2 else 2 if switch_id == 5 else None,
-          '10.1.4.40': 2 if switch_id == 2 else 2 if switch_id == 5 else None,
-          '10.2.5.50': 1 if switch_id == 3 else 3 if switch_id == 5 else None,
-          '10.2.6.60': 2 if switch_id == 3 else 3 if switch_id == 5 else None,
-          '10.2.7.70': 1 if switch_id == 4 else 4 if switch_id == 5 else None,
-          '10.2.8.80': 2 if switch_id == 4 else 4 if switch_id == 5 else None,
-          '10.3.9.90': 5 if switch_id == 5 else None,
-          '108.24.31.112': 5 if switch_id == 1 else 6 if switch_id == 2 else 7 if switch_id == 3 else 8 if switch_id == 4 else 5 if switch_id == 5 else None,
-          '106.44.82.103': 6 if switch_id == 1 else 7 if switch_id == 2 else 8 if switch_id == 3 else 9 if switch_id == 4 else 6 if switch_id == 5 else None,
-        }
-
-        # When the IP address of the destination host is known
-        if str(ip_packet.dstip) in ip_to_port and ip_to_port[str(ip_packet.dstip)] is not None:
-            msg.actions.append(of.ofp_action_output(port=ip_to_port[str(ip_packet.dstip)]))
-            self.connection.send(msg)
-        else:
-            # The controller does not know the destination, flood the packet
-            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
-            self.connection.send(msg)
-
+        msg.actions.append(of.ofp_action_output(port = ip_to_port[str(ip_packet.dstip)]))
+    else:
+        msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+    msg.data = packet_in
+    self.connection.send(msg)
 
   def _handle_PacketIn (self, event):
     """
