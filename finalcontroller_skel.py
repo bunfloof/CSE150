@@ -58,6 +58,20 @@ class Final (object):
     ip_header = packet.find('ipv4')
 
 
+    ip_to_port_mapping = {
+      "10.1.1.10": 1,
+      "10.1.2.20": 2,
+      "10.1.3.30": 1,
+      "10.1.4.40": 2,
+      "10.2.5.50": 1,
+      "10.2.6.60": 2,
+      "10.2.7.70": 1,
+      "10.2.8.80": 2,
+      "108.24.31.112": 1,
+      "106.44.82.103": 2,
+      "10.3.9.90": 5,
+    }
+    
     if ip_header is None: # Non-IP packet
       # Flood the packet
       msg = of.ofp_flow_mod()
@@ -67,47 +81,43 @@ class Final (object):
       msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
       msg.data = packet_in
       self.connection.send(msg)
+      
     else: # IP packet
       src_ip = ip_header.srcip
       dst_ip = ip_header.dstip
       icmp_packet = packet.find('icmp')
+      destination_port = ip_to_port_mapping.get(str(dst_ip), None)
 
-      # Define the correct outgoing port based on the destination IP and switch id.
-      if dst_ip in ["10.1.1.10", "10.1.2.20"]:
-        out_port = 1 if switch_id == 1 else 2
-      elif dst_ip in ["10.1.3.30", "10.1.4.40"]:
-        out_port = 1 if switch_id == 2 else 2
-      elif dst_ip in ["10.2.5.50", "10.2.6.60"]:
-        out_port = 1 if switch_id == 3 else 2
-      elif dst_ip in ["10.2.7.70", "10.2.8.80"]:
-        out_port = 1 if switch_id == 4 else 2
-      elif dst_ip == "10.3.9.90":
-        out_port = 5
-      elif dst_ip in ["108.24.31.112", "106.44.82.103"]:
-        out_port = 6
-      else:
-        out_port = of.OFPP_FLOOD
+      # If destination port is not found in the mapping, then flood the packet
+      if destination_port is None:
+          destination_port = of.OFPP_FLOOD
 
-      # If the packet is from untrusted host, drop all ICMP packets and any IP traffic to the server.
-      if src_ip == "106.44.82.103" and (icmp_packet is not None or dst_ip == "10.3.9.90"):
-        out_port = of.OFPP_NONE
-      # If the packet is from trusted host, drop ICMP packets to hosts in Department B and the server, and any IP traffic to the server.
-      elif src_ip == "108.24.31.112" and ((icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80", "10.3.9.90"]) or dst_ip == "10.3.9.90"):
-        out_port = of.OFPP_NONE
-      # If the packet is from hosts in Department A, drop ICMP packets to hosts in Department B.
-      elif src_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"] and icmp_packet is not None and dst_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"]:
-        out_port = of.OFPP_NONE
-      # If the packet is from hosts in Department B, drop ICMP packets to hosts in Department A.
-      elif src_ip in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"] and icmp_packet is not None and dst_ip in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"]:
-        out_port = of.OFPP_NONE
+      # Create the action
+      action = of.ofp_action_output(port = destination_port)
 
-      # Setup flow to avoid packet_in next time
+      # Create the message
       msg = of.ofp_flow_mod()
       msg.match = of.ofp_match.from_packet(packet)
       msg.idle_timeout = 300
       msg.hard_timeout = 720
-      msg.actions.append(of.ofp_action_output(port = out_port))
       msg.data = packet_in
+
+      # If the packet is from untrusted host, drop all ICMP packets and any IP traffic to the server.
+      if str(src_ip) == "106.44.82.103" and (icmp_packet is not None or str(dst_ip) == "10.3.9.90"):
+          pass
+      # If the packet is from trusted host, drop ICMP packets to hosts in Department B and the server, and any IP traffic to the server.
+      elif str(src_ip) == "108.24.31.112" and ((icmp_packet is not None and str(dst_ip) in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80", "10.3.9.90"]) or str(dst_ip) == "10.3.9.90"):
+          pass
+      # If the packet is from hosts in Department A, drop ICMP packets to hosts in Department B.
+      elif str(src_ip) in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"] and icmp_packet is not None and str(dst_ip) in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"]:
+          pass
+      # If the packet is from hosts in Department B, drop ICMP packets to hosts in Department A.
+      elif str(src_ip) in ["10.2.5.50", "10.2.6.60", "10.2.7.70", "10.2.8.80"] and icmp_packet is not None and str(dst_ip) in ["10.1.1.10", "10.1.2.20", "10.1.3.30", "10.1.4.40"]:
+          pass
+      else:
+          msg.actions.append(action)
+
+      # Send the message
       self.connection.send(msg)
 
   def _handle_PacketIn (self, event):
