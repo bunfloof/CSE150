@@ -65,8 +65,7 @@ class Final (object):
 
         # Block ICMP traffic from untrusted host to internal hosts and server
         if icmp_packet is not None and ip_packet.srcip == '106.44.82.103':
-            if ip_packet.dstip in ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40', '10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80', '10.3.9.90']:
-                return
+            return
 
         # Block ICMP traffic between trusted host and untrusted host
         if icmp_packet is not None:
@@ -79,8 +78,7 @@ class Final (object):
 
         # Block ICMP traffic from trusted host to Department B
         if icmp_packet is not None and ip_packet.srcip == '108.24.31.112':
-            if ip_packet.dstip in ['10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80']:
-                return
+            return
 
         # Block ICMP traffic between Department A and Department B
         if icmp_packet is not None:
@@ -93,27 +91,28 @@ class Final (object):
         msg.hard_timeout = 720
         msg.data = packet_in
 
-        # ip_to_port dictionary needs to be initialized appropriately for each switch
         ip_to_port = {
-            '10.1.1.10': 1, # port at s1
-            '10.1.2.20': 2, # port at s1
-            '10.1.3.30': 1, # port at s2
-            '10.1.4.40': 2, # port at s2
-            '10.2.5.50': 1, # port at s3
-            '10.2.6.60': 2, # port at s3
-            '10.2.7.70': 1, # port at s4
-            '10.2.8.80': 2, # port at s4
-            '108.24.31.112': 1, # port at s6
-            '106.44.82.103': 2, # port at s6
-            '10.3.9.90': 5  # port at s5
+          '10.1.1.10': 1 if switch_id == 1 else 1 if switch_id == 5 else None,
+          '10.1.2.20': 2 if switch_id == 1 else 1 if switch_id == 5 else None,
+          '10.1.3.30': 1 if switch_id == 2 else 2 if switch_id == 5 else None,
+          '10.1.4.40': 2 if switch_id == 2 else 2 if switch_id == 5 else None,
+          '10.2.5.50': 1 if switch_id == 3 else 3 if switch_id == 5 else None,
+          '10.2.6.60': 2 if switch_id == 3 else 3 if switch_id == 5 else None,
+          '10.2.7.70': 1 if switch_id == 4 else 4 if switch_id == 5 else None,
+          '10.2.8.80': 2 if switch_id == 4 else 4 if switch_id == 5 else None,
+          '10.3.9.90': 5 if switch_id == 5 else None,
+          '108.24.31.112': 5 if switch_id == 1 else 6 if switch_id == 2 else 7 if switch_id == 3 else 8 if switch_id == 4 else 5 if switch_id == 5 else None,
+          '106.44.82.103': 6 if switch_id == 1 else 7 if switch_id == 2 else 8 if switch_id == 3 else 9 if switch_id == 4 else 6 if switch_id == 5 else None,
         }
-        
-        # check if the destination IP is known and in ip_to_port dictionary
-        if ip_packet.dstip in ip_to_port:
-            action = of.ofp_action_output(port = ip_to_port[ip_packet.dstip])
-            msg.actions.append(action)
 
-        self.connection.send(msg)
+        # When the IP address of the destination host is known
+        if str(ip_packet.dstip) in ip_to_port and ip_to_port[str(ip_packet.dstip)] is not None:
+            msg.actions.append(of.ofp_action_output(port=ip_to_port[str(ip_packet.dstip)]))
+            self.connection.send(msg)
+        else:
+            # The controller does not know the destination, flood the packet
+            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+            self.connection.send(msg)
 
 
   def _handle_PacketIn (self, event):
