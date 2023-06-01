@@ -42,7 +42,7 @@ The links are marked as 'OK OK', indicating that the connections are up and runn
 
 ![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled.png)
 
-From the output of the **`dump`** command, it's clear that each host has been assigned the correct IP address as per the assignment's requirements:
+From the output of the **`dump`** command, it's clear that each host has been assigned the correct IP address as per the assignment's requirements. Refer to my final_skel.py file.
 
 - Host h10 has an IP address of 10.1.1.10/24.
 - Host h20 has an IP address of 10.1.2.20/24.
@@ -72,40 +72,46 @@ After I generated some traffic using `pingall`, I immediately ran `dpctl dump-
 
 ### 6. IP traffic is implemented not using OFPP_FLOOD
 
-My code complies with the rubric's requirement to not use **`OFPP_FLOOD`** for IP traffic. It forwards packets to the correct ports based on source and destination IPs, but ignores all other traffic, including ICMP traffic from untrusted hosts. It continues to use **`OFPP_FLOOD`** for non-IP traffic. Please refer to my controller code in my finalcontroller_skel.py file.
+My code complies with the rubric's requirement to not use `OFPP_FLOOD` for IP traffic. `OFFP_FLOOD` is only used for Non-IP traffic. I have created forwarding tables with entries using a dictionary, consisting of switch ports, source IP, and destination IP, which that forwards packets to their respective destination. Below are screenshots of my finalcontroller_skel.py file:
+
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%203.png)
+
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%204.png)
 
 ### 7. Untrusted Host cannot send ICMP traffic to Host 10 to 80
 
 The **`ping`** command results show that the untrusted host (h_untrust) cannot send ICMP packets to any other host. This confirms that I have successfully blocked ICMP traffic from the untrusted host, satisfying the assignment requirements. Below is a screenshot of my output:
 
-![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%203.png)
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%205.png)
 
 ### 8. Untrusted Host can send TCP traffic to the hosts.
 
 Based on the output of my **`iperf`** commands, the untrusted host can still send TCP traffic to all other hosts, indicating that not all traffic has been blocked and only ICMP has been stopped. Below is a screenshot of my output:
 
-![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%204.png)
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%206.png)
 
 ### 9. Untrusted/Trust Host cannot send any traffic to Server
 
 The `ping` attempts from both the trusted and untrusted host to the server resulted in 100% packet loss, meaning that the server did not respond to the pings. This behavior demonstrates that no ICMP (or any other) traffic can reach the server from these hosts. This proves that the controller is successfully blocking traffic from the untrusted and trusted hosts to the server, meeting the requirements. Below is a screenshot of my output:
 
-![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%205.png)
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%207.png)
+
+The iperf also is unresponsive. demonstrating trust host can not send TCP traffic
 
 ### 10. Trusted Host cannot send ICMP traffic to Host 50 to 80
 
 The `ping` attempts from the trusted host to hosts 50, 60, 70, and 80 also resulted in 100% packet loss. This shows that the controller is successfully blocking ICMP traffic from the trusted host to these hosts. Below is a screenshot of my output:
 
-![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%206.png)
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%208.png)
 
 ### 11. Trusted Host can send ICMP traffic to Host 10 to 40
 
 The `ping` attempts from the trusted host to hosts 10, 20, 30, and 40 were successful, with a packet loss of 0%. This demonstrates that ICMP traffic from the trusted host to these hosts is allowed by the controller. Below is a screenshot of my output:
 
-![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%207.png)
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%209.png)
 
 ### 12. Host 10 to 40 cannot send ICMP traffic to Host 50 to 80
 
 The `ping` attempts from hosts 10, 20, 30, and 40 to hosts 50, 60, 70, and 80 resulted in 100% packet loss. This shows that the SDN controller is successfully blocking ICMP traffic from hosts 10 to 40 to hosts 50 to 80. Below is a screenshot of my output:
 
-![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%208.png)
+![Untitled](Final%20Project%20Implementing%20a%20Simple%20Router%20bf7f3c3006f3429d9b05112fc6358745/Untitled%2010.png)
