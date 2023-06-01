@@ -55,60 +55,370 @@ class Final (object):
     #      (for example, s1 would have switch_id == 1, s2 would have switch_id == 2, etc...)
     # You should use these to determine where a packet came from. To figure out where a packet 
     # is going, you can use the IP header information.
-    # determine the source and destination IP addresses
-    ip_packet = packet.find('ipv4')
-    icmp_packet = packet.find('icmp')
 
-    # Set up flow table rules
-    msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet, port_on_switch)
-
-    # IP addresses for the hosts
-    hosts_A = ['10.1.1.10', '10.1.2.20', '10.1.3.30', '10.1.4.40']  # Department A
-    hosts_B = ['10.2.5.50', '10.2.6.60', '10.2.7.70', '10.2.8.80']  # Department B
-    server_ip = '10.3.9.90'
-
-    # Identify the host
-    if ip_packet:
-        src_ip = str(ip_packet.srcip)
-        dst_ip = str(ip_packet.dstip)
-
-        # Rules for Untrusted Host
-        if src_ip == '106.44.82.103':
-            if icmp_packet or dst_ip == server_ip:
-                return
-
-        # Rules for Trusted Host
-        if src_ip == '108.24.31.112':
-            if dst_ip == server_ip or (icmp_packet and dst_ip in hosts_B):
-                return
-
-        # ICMP traffic rules between Department A and B
-        if icmp_packet and ((src_ip in hosts_A and dst_ip in hosts_B) or (src_ip in hosts_B and dst_ip in hosts_A)):
-            return
-
-        # Direct IP traffic to the correct port, based on IP address
-        if dst_ip in hosts_A or dst_ip in hosts_B or dst_ip == server_ip:
-            if switch_id == 1 and dst_ip in hosts_A:   # Switch 1 connected to Department A
-                msg.actions.append(of.ofp_action_output(port=1)) 
-            elif switch_id == 2 and dst_ip in hosts_B: # Switch 2 connected to Department B
-                msg.actions.append(of.ofp_action_output(port=1))
-            elif switch_id == 3:                       # Core switch
-                if dst_ip == server_ip:                # To Server
-                    msg.actions.append(of.ofp_action_output(port=2))
-                elif dst_ip in hosts_A:                # To Department A
-                    msg.actions.append(of.ofp_action_output(port=1))
-                elif dst_ip in hosts_B:                # To Department B
-                    msg.actions.append(of.ofp_action_output(port=3))
-        else:
-            # Flood all non-IP traffic
-            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
-    else:
-        # Flood all non-IP traffic
-        msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+    if not packet.find('ipv4'): # Non-IP packet
+      msg = of.ofp_flow_mod()
+      msg.match = of.ofp_match.from_packet(packet)
+      msg.idle_timeout = 300
+      msg.hard_timeout = 720
+      msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+      msg.data = packet_in
+      self.connection.send(msg)
+    else: # IP packet
+      src_ip = packet.find('ipv4').srcip
+      dst_ip = packet.find('ipv4').dstip
+      dpid = switch_id  # The id of the switch that received the packet
   
-    msg.data = packet_in
-    self.connection.send(msg)
+      forwarding_rules = {
+        # Forwarding rules from h10 to the server
+        (1, "10.1.1.10", "10.3.9.90"): 3,  # From s1 to s5
+        (5, "10.1.1.10", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h10
+        (5, "10.3.9.90", "10.1.1.10"): 1,  # From s5 to s1
+        (1, "10.3.9.90", "10.1.1.10"): 1,  # From s1 to h10
+
+        # Forwarding rules from h20 to the server
+        (1, "10.1.2.20", "10.3.9.90"): 3,  # From s1 to s5
+        (5, "10.1.2.20", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h20
+        (5, "10.3.9.90", "10.1.2.20"): 1,  # From s5 to s1
+        (1, "10.3.9.90", "10.1.2.20"): 2,  # From s1 to h10
+
+        # Forwarding rules from h30 to the server mine
+        (2, "10.1.3.30", "10.3.9.90"): 3,  # From s2 to s5
+        (5, "10.1.3.30", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h10
+        (5, "10.3.9.90", "10.1.3.30"): 2,  # From s5 to s2
+        (2, "10.3.9.90", "10.1.3.30"): 1,  # From s1 to h10
+
+        # Forwarding rules from h30 to the server staging
+        (2, "10.1.4.40", "10.3.9.90"): 3,  # From s1 to s5
+        (5, "10.1.4.40", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h10
+        (5, "10.3.9.90", "10.1.4.40"): 2,  # From s5 to s1
+        (2, "10.3.9.90", "10.1.4.40"): 2,  # From s1 to h10
+
+        # Stage department B
+        # Forwarding rules from h10 to the server
+        (3, "10.2.5.50", "10.3.9.90"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h10
+        (5, "10.3.9.90", "10.2.5.50"): 3,  # From s5 to s1
+        (3, "10.3.9.90", "10.2.5.50"): 1,  # From s1 to h10
+
+        # Forwarding rules from h20 to the server
+        (3, "10.2.6.60", "10.3.9.90"): 3,  # From s1 to s5
+        (5, "10.2.6.60", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h20
+        (5, "10.3.9.90", "10.2.6.60"): 3,  # From s5 to s1
+        (3, "10.3.9.90", "10.2.6.60"): 2,  # From s1 to h10
+
+        # Forwarding rules from h30 to the server mine
+        (4, "10.2.7.70", "10.3.9.90"): 3,  # From s2 to s5
+        (5, "10.2.7.70", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h10
+        (5, "10.3.9.90", "10.2.7.70"): 4,  # From s5 to s2
+        (4, "10.3.9.90", "10.2.7.70"): 1,  # From s1 to h10
+
+        # Forwarding rules from h30 to the server staging
+        (4, "10.2.8.80", "10.3.9.90"): 3,  # From s1 to s5
+        (5, "10.2.8.80", "10.3.9.90"): 5,  # From s5 to server
+
+        # Reverse forwarding rules from the server to h10
+        (5, "10.3.9.90", "10.2.8.80"): 4,  # From s5 to s1
+        (4, "10.3.9.90", "10.2.8.80"): 2,  # From s1 to h10
+
+        # From h10 to h30
+        (1, "10.1.1.10", "10.1.3.30"): 3,  # From s1 to s5
+        (5, "10.1.1.10", "10.1.3.30"): 2,  # From s5 to s2
+        (2, "10.1.1.10", "10.1.3.30"): 1,  # From s2 to h30
+
+        # From h30 to h10
+        (2, "10.1.3.30", "10.1.1.10"): 3,  # From s2 to s5
+        (5, "10.1.3.30", "10.1.1.10"): 1,  # From s5 to s1
+        (1, "10.1.3.30", "10.1.1.10"): 1,  # From s1 to h10
+
+        # From h10 to h40
+        (1, "10.1.1.10", "10.1.4.40"): 3,  # From s1 to s5
+        (5, "10.1.1.10", "10.1.4.40"): 2,  # From s5 to s2
+        (2, "10.1.1.10", "10.1.4.40"): 2,  # From s2 to h40
+
+        # From h40 to h10
+        (2, "10.1.4.40", "10.1.1.10"): 3,  # From s2 to s5
+        (5, "10.1.4.40", "10.1.1.10"): 1,  # From s5 to s1
+        (1, "10.1.4.40", "10.1.1.10"): 1,  # From s1 to h10
+
+        # From h20 to h30
+        (1, "10.1.2.20", "10.1.3.30"): 3,  # From s1 to s5
+        (5, "10.1.2.20", "10.1.3.30"): 2,  # From s5 to s2
+        (2, "10.1.2.20", "10.1.3.30"): 1,  # From s2 to h30
+
+        # From h30 to h20
+        (2, "10.1.3.30", "10.1.2.20"): 3,  # From s2 to s5
+        (5, "10.1.3.30", "10.1.2.20"): 1,  # From s5 to s1
+        (1, "10.1.3.30", "10.1.2.20"): 2,  # From s1 to h20
+        # From h20 to h40
+        (1, "10.1.2.20", "10.1.4.40"): 3,  # From s1 to s5
+        (5, "10.1.2.20", "10.1.4.40"): 2,  # From s5 to s2
+        (2, "10.1.2.20", "10.1.4.40"): 2,  # From s2 to h40
+
+        # From h40 to h20
+        (2, "10.1.4.40", "10.1.2.20"): 3,  # From s2 to s5
+        (5, "10.1.4.40", "10.1.2.20"): 1,  # From s5 to s1
+        (1, "10.1.4.40", "10.1.2.20"): 2,  # From s1 to h20
+
+        # From h30 to h40
+        (2, "10.1.3.30", "10.1.4.40"): 2,  # From s2 to h40
+        # From h40 to h30
+        (2, "10.1.4.40", "10.1.3.30"): 1,  # From s2 to h30
+  
+        # From h20 to h40
+        (1, "10.1.2.20", "10.1.4.40"): 3,  # From s1 to s5
+        (1, "10.1.1.10", "10.1.2.20"): 2,  # From s1 to h20
+        
+        # From h20 to h10
+        (1, "10.1.2.20", "10.1.1.10"): 1,  # From s1 to h10
+        # From h30 to h40
+        (2, "10.1.3.30", "10.1.4.40"): 2,  # From s2 to h40
+        # From h40 to h30
+        (2, "10.1.4.40", "10.1.3.30"): 1,  # From s2 to h30
+
+        # Forwarding rules from h10 to h30
+        (1, "10.1.1.10", "10.1.3.30"): 3,  # From s1 to s5
+        (5, "10.1.1.10", "10.1.3.30"): 2,  # From s5 to s2
+        (2, "10.1.1.10", "10.1.3.30"): 1,  # From s2 to h30
+    
+        # Reverse forwarding rules from h30 to h10
+        (2, "10.1.3.30", "10.1.1.10"): 3,  # From s2 to s5
+        (5, "10.1.3.30", "10.1.1.10"): 1,  # From s5 to s1
+        (1, "10.1.3.30", "10.1.1.10"): 1,  # From s1 to h10
+    
+        # Forwarding rules from h_trust to Department A hosts (h10, h20, h30, h40)
+        (6, "108.24.31.112", "10.1.1.10"): 3,  # From s6 to s5
+        (5, "108.24.31.112", "10.1.1.10"): 1,  # From s5 to s1
+        (1, "108.24.31.112", "10.1.1.10"): 1,  # From s1 to h10
+    
+        (6, "108.24.31.112", "10.1.2.20"): 3,  # From s6 to s5
+        (5, "108.24.31.112", "10.1.2.20"): 1,  # From s5 to s1
+        (1, "108.24.31.112", "10.1.2.20"): 2,  # From s1 to h20
+    
+        (6, "108.24.31.112", "10.1.3.30"): 3,  # From s6 to s5
+        (5, "108.24.31.112", "10.1.3.30"): 2,  # From s5 to s2
+        (2, "108.24.31.112", "10.1.3.30"): 1,  # From s2 to h30
+    
+        (6, "108.24.31.112", "10.1.4.40"): 3,  # From s6 to s5
+        (5, "108.24.31.112", "10.1.4.40"): 2,  # From s5 to s2
+        (2, "108.24.31.112", "10.1.4.40"): 2,  # From s2 to h40
+    
+        # Reverse forwarding rules from Department A hosts to h_trust
+        (1, "10.1.1.10", "108.24.31.112"): 3,  # From s1 to s5
+        (5, "10.1.1.10", "108.24.31.112"): 6,  # From s5 to s6
+        (6, "10.1.1.10", "108.24.31.112"): 1,  # From s6 to h_trust
+    
+        (1, "10.1.2.20", "108.24.31.112"): 3,  # From s1 to s5
+        (5, "10.1.2.20", "108.24.31.112"): 6,  # From s5 to s6
+        (6, "10.1.2.20", "108.24.31.112"): 1,  # From s6 to h_trust
+    
+        (2, "10.1.3.30", "108.24.31.112"): 3,  # From s2 to s5
+        (5, "10.1.3.30", "108.24.31.112"): 6,  # From s5 to s6
+        (6, "10.1.3.30", "108.24.31.112"): 1,  # From s6 to h_trust
+    
+        (2, "10.1.4.40", "108.24.31.112"): 3,  # From s2 to s5
+        (5, "10.1.4.40", "108.24.31.112"): 6,  # From s5 to s6
+        (6, "10.1.4.40", "108.24.31.112"): 1,  # From s6 to h_trust
+
+        # Department B hosts (h50, h60, h70, h80)
+        # From h50 to h60
+        (3, "10.2.5.50", "10.2.6.60"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "10.2.6.60"): 3,  # From s5 to s3
+        (3, "10.2.5.50", "10.2.6.60"): 2,  # From s3 to h60
+    
+        # From h60 to h50
+        (3, "10.2.6.60", "10.2.5.50"): 3,  # From s3 to s5
+        (5, "10.2.6.60", "10.2.5.50"): 3,  # From s5 to s3
+        (3, "10.2.6.60", "10.2.5.50"): 1,  # From s3 to h50
+    
+        # From h50 to h70
+        (3, "10.2.5.50", "10.2.7.70"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "10.2.7.70"): 4,  # From s5 to s4
+        (4, "10.2.5.50", "10.2.7.70"): 1,  # From s4 to h70
+
+        # From h70 to h50
+        (4, "10.2.7.70", "10.2.5.50"): 3,  # From s4 to s5
+        (5, "10.2.7.70", "10.2.5.50"): 3,  # From s5 to s3
+        (3, "10.2.7.70", "10.2.5.50"): 1,  # From s3 to h50
+
+        # From h50 to h80
+        (3, "10.2.5.50", "10.2.8.80"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "10.2.8.80"): 4,  # From s5 to s4
+        (4, "10.2.5.50", "10.2.8.80"): 2,  # From s4 to h80
+
+        # From h80 to h50
+        (4, "10.2.8.80", "10.2.5.50"): 3,  # From s4 to s5
+        (5, "10.2.8.80", "10.2.5.50"): 3,  # From s5 to s3
+        (3, "10.2.8.80", "10.2.5.50"): 1,  # From s3 to h50
+
+        # From h60 to h80
+        (3, "10.2.6.60", "10.2.8.80"): 3,  # From s3 to s5
+        (5, "10.2.6.60", "10.2.8.80"): 4,  # From s5 to s4
+        (4, "10.2.6.60", "10.2.8.80"): 2,  # From s4 to h80
+    
+        # From h80 to h60
+        (4, "10.2.8.80", "10.2.6.60"): 3,  # From s4 to s5
+        (5, "10.2.8.80", "10.2.6.60"): 3,  # From s5 to s3
+        (3, "10.2.8.80", "10.2.6.60"): 2,  # From s3 to h60
+
+        # Stage 2
+        # Forwarding rules from h50 to h60
+        (3, "10.2.5.50", "10.2.6.60"): 2,  # From s3 to h60
+        # Reverse forwarding rules from h60 to h50
+        (3, "10.2.6.60", "10.2.5.50"): 1,  # From s3 to h50
+        
+        # Forwarding rules from h50 to h70
+        (3, "10.2.5.50", "10.2.7.70"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "10.2.7.70"): 4,  # From s5 to s4
+        (4, "10.2.5.50", "10.2.7.70"): 1,  # From s4 to h70
+        # Reverse forwarding rules from h70 to h50
+        (4, "10.2.7.70", "10.2.5.50"): 3,  # From s4 to s5
+        (5, "10.2.7.70", "10.2.5.50"): 3,  # From s5 to s3
+        (3, "10.2.7.70", "10.2.5.50"): 1,  # From s3 to h50
+
+        # Forwarding rules from h50 to h80
+        (3, "10.2.5.50", "10.2.8.80"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "10.2.8.80"): 4,  # From s5 to s4
+        (4, "10.2.5.50", "10.2.8.80"): 2,  # From s4 to h80
+        # Reverse forwarding rules from h80 to h50
+        (4, "10.2.8.80", "10.2.5.50"): 3,  # From s4 to s5
+        (5, "10.2.8.80", "10.2.5.50"): 3,  # From s5 to s3
+        (3, "10.2.8.80", "10.2.5.50"): 1,  # From s3 to h50
+
+        # Forwarding rules from h60 to h70
+        (3, "10.2.6.60", "10.2.7.70"): 3,  # From s3 to s5
+        (5, "10.2.6.60", "10.2.7.70"): 4,  # From s5 to s4
+        (4, "10.2.6.60", "10.2.7.70"): 1,  # From s4 to h70
+        # Reverse forwarding rules from h70 to h60
+        (4, "10.2.7.70", "10.2.6.60"): 3,  # From s4 to s5
+        (5, "10.2.7.70", "10.2.6.60"): 3,  # From s5 to s3
+        (3, "10.2.7.70", "10.2.6.60"): 2,  # From s3 to h60
+
+        # Forwarding rules from h60 to h80
+        (3, "10.2.6.60", "10.2.8.80"): 3,  # From s3 to s5
+        (5, "10.2.6.60", "10.2.8.80"): 4,  # From s5 to s4
+        (4, "10.2.6.60", "10.2.8.80"): 2,  # From s4 to h80
+        # Reverse forwarding rules from h80 to h60
+        (4, "10.2.8.80", "10.2.6.60"): 3,  # From s4 to s5
+        (5, "10.2.8.80", "10.2.6.60"): 3,  # From s5 to s3
+        (3, "10.2.8.80", "10.2.6.60"): 2,  # From s3 to h60
+
+        # Forwarding rules from h70 to h80
+        (4, "10.2.7.70", "10.2.8.80"): 2,  # From s4 to h80
+        # Reverse forwarding rules from h80 to h70
+        (4, "10.2.8.80", "10.2.7.70"): 1,  # From s4 to h70
+
+      }
+
+      tcp_forwarding_rules = {
+        (6, "106.44.82.103", "10.1.1.10"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.1.1.10"): 1,  # From s5 to s1
+        (1, "106.44.82.103", "10.1.1.10"): 1,  # From s1 to h10
+    
+
+        (1, "10.1.1.10", "106.44.82.103"): 3,  # From s1 to s5
+        (5, "10.1.1.10", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.1.1.10", "106.44.82.103"): 2,  # From s6 to h_untrust
+    
+        (6, "106.44.82.103", "10.1.2.20"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.1.2.20"): 1,  # From s5 to s1
+        (1, "106.44.82.103", "10.1.2.20"): 2,  # From s1 to h20
+    
+        (1, "10.1.2.20", "106.44.82.103"): 3,  # From s1 to s5
+        (5, "10.1.2.20", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.1.2.20", "106.44.82.103"): 2,  # From s6 to h_untrust
+        # h30 and h_untrust
+        (6, "106.44.82.103", "10.1.3.30"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.1.3.30"): 2,  # From s5 to s2
+        (2, "106.44.82.103", "10.1.3.30"): 1,  # From s2 to h30
+    
+        (2, "10.1.3.30", "106.44.82.103"): 3,  # From s2 to s5
+        (5, "10.1.3.30", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.1.3.30", "106.44.82.103"): 2,  # From s6 to h_untrust
+    
+        # h40 and h_untrust
+        (6, "106.44.82.103", "10.1.4.40"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.1.4.40"): 2,  # From s5 to s2
+        (2, "106.44.82.103", "10.1.4.40"): 2,  # From s2 to h40
+    
+        (2, "10.1.4.40", "106.44.82.103"): 3,  # From s2 to s5
+        (5, "10.1.4.40", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.1.4.40", "106.44.82.103"): 2,  # From s6 to h_untrust
+        
+        # h50 and h_untrust
+        (6, "106.44.82.103", "10.2.5.50"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.2.5.50"): 3,  # From s5 to s3
+        (3, "106.44.82.103", "10.2.5.50"): 1,  # From s3 to h50
+    
+        (3, "10.2.5.50", "106.44.82.103"): 3,  # From s3 to s5
+        (5, "10.2.5.50", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.2.5.50", "106.44.82.103"): 2,  # From s6 to h_untrust
+    
+        # h60 and h_untrust
+        (6, "106.44.82.103", "10.2.6.60"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.2.6.60"): 3,  # From s5 to s3
+        (3, "106.44.82.103", "10.2.6.60"): 2,  # From s3 to h60
+    
+        (3, "10.2.6.60", "106.44.82.103"): 3,  # From s3 to s5
+        (5, "10.2.6.60", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.2.6.60", "106.44.82.103"): 2,  # From s6 to h_untrust
+    
+        # h70 and h_untrust
+        (6, "106.44.82.103", "10.2.7.70"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.2.7.70"): 4,  # From s5 to s4
+        (4, "106.44.82.103", "10.2.7.70"): 1,  # From s4 to h70
+    
+        (4, "10.2.7.70", "106.44.82.103"): 3,  # From s4 to s5
+        (5, "10.2.7.70", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.2.7.70", "106.44.82.103"): 2,  # From s6 to h_untrust
+    
+        # h80 and h_untrust
+        (6, "106.44.82.103", "10.2.8.80"): 3,  # From s6 to s5
+        (5, "106.44.82.103", "10.2.8.80"): 4,  # From s5 to s4
+        (4, "106.44.82.103", "10.2.8.80"): 2,  # From s4 to h80
+    
+        (4, "10.2.8.80", "106.44.82.103"): 3,  # From s4 to s5
+        (5, "10.2.8.80", "106.44.82.103"): 6,  # From s5 to s6
+        (6, "10.2.8.80", "106.44.82.103"): 2,  # From s6 to h_untrust
+      }
+      
+      key = (dpid, str(src_ip), str(dst_ip))
+      if key in forwarding_rules:
+        #print("dpid={0}, src_ip={1}, dst_ip={2}".format(dpid, src_ip, dst_ip))
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 300
+        msg.hard_timeout = 720
+        msg.actions.append(of.ofp_action_output(port = forwarding_rules[key]))
+        msg.data = packet_in
+        self.connection.send(msg)
+      if key in tcp_forwarding_rules and packet.find('tcp'):
+        #print("dpid={0}, src_ip={1}, dst_ip={2}".format(dpid, src_ip, dst_ip))
+        msg = of.ofp_flow_mod()
+        msg.match = of.ofp_match.from_packet(packet)
+        msg.idle_timeout = 300
+        msg.hard_timeout = 720
+        msg.actions.append(of.ofp_action_output(port = tcp_forwarding_rules[key]))
+        msg.data = packet_in
+        self.connection.send(msg)
+      else:
+        # Drop the packet if there's no matching rule
+        pass
+        
 
   def _handle_PacketIn (self, event):
     """
