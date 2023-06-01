@@ -55,8 +55,9 @@ class Final (object):
     #      (for example, s1 would have switch_id == 1, s2 would have switch_id == 2, etc...)
     # You should use these to determine where a packet came from. To figure out where a packet 
     # is going, you can use the IP header information.
-
-    if not packet.find('ipv4'): # Non-IP packet
+    ip_header = packet.find('ipv4')
+    
+    if ip_header is None: # Non-IP packet
       msg = of.ofp_flow_mod()
       msg.match = of.ofp_match.from_packet(packet)
       msg.idle_timeout = 300
