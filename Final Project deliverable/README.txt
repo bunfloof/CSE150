@@ -36,7 +36,7 @@ sudo ~/pox/pox.py misc.finalcontroller_skel.py
 
 3. Place `final_skel.py` in ~ directory.
 
-4. Launch skeleton.
+4. Launch topology.
 
 ```
 sudo python final_skel.py
