@@ -16,7 +16,7 @@ This lab will introduce the user to Software-Defined Networking (SDN) and the Op
 
 ```
 .
-├── final_skel.py                # Contains opology code
+├── final_skel.py                # Contains topology code
 ├── finalcontroller_skel.py      # Contains firewall code
 ├── project.pdf                  # Contains explanations and screenshots of required commands
 └── README.txt
