@@ -1,5 +1,10 @@
+#########################################################
+# Joey Ma
+# 2023 Spring CSE150 Final Project
+# finalcontroller_skel.py
+# controller
+#########################################################
 # Final Skeleton
-#
 # Hints/Reminders from Lab 3:
 #
 # To check the source and destination of an IP packet, you can use
@@ -322,6 +327,10 @@ class Final (object):
         (4, "10.2.7.70", "10.2.8.80"): 2,  # From s4 to h80
         # Reverse forwarding rules from h80 to h70
         (4, "10.2.8.80", "10.2.7.70"): 1,  # From s4 to h70
+        
+        # sammy tesfai h_trust to h_untrust and vice versa
+        (6, "108.24.31.112", "106.44.82.103"): 2,  # From s2 to s5
+        (6, "106.44.82.103", "108.24.31.112"): 1,  # From s5 to s6
 
       }
 
@@ -395,8 +404,12 @@ class Final (object):
         (4, "10.2.8.80", "106.44.82.103"): 3,  # From s4 to s5
         (5, "10.2.8.80", "106.44.82.103"): 6,  # From s5 to s6
         (6, "10.2.8.80", "106.44.82.103"): 2,  # From s6 to h_untrust
+
+        # sammy tesfai h_trust to h_untrust and vice versa
+        (6, "108.24.31.112", "106.44.82.103"): 2,  # From s2 to s5
+        (6, "106.44.82.103", "108.24.31.112"): 1,  # From s5 to s6
       }
-      
+
       key = (dpid, str(src_ip), str(dst_ip))
       if key in forwarding_rules:
         #print("dpid={0}, src_ip={1}, dst_ip={2}".format(dpid, src_ip, dst_ip))
