@@ -6,7 +6,7 @@ Publishing to share with mental health provider.
 
 ## synctool.config
 
-Published: No
+Published: Yes
 
 Backblaze: Yes
 
